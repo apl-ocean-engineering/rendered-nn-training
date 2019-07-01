@@ -12,14 +12,14 @@ class mineRender(ShowBase):
         ShowBase.__init__(self)
 
         mine_x = uniform(-3,3)
-        mine_y = uniform(5,10)
+        mine_y = uniform(5,15)
         mine_z = uniform(-2,2)
         mine_H = uniform(-180,180)
         mine_p = uniform(-180,180)
         mine_r = uniform(-180,180)
-        light_x = uniform(-6,6)
-        light_y = uniform(-6,6)
-        light_z = uniform(-6,6)
+        light_x = uniform(-10,10)
+        light_y = uniform(-5,mine_y)
+        light_z = uniform(-10,10)
 
         self.mine = self.loader.loadModel("models/mine") # load model
         self.mine.reparentTo(self.render) # add model to scene
@@ -40,13 +40,7 @@ class mineRender(ShowBase):
         self.spot.lookAt(self.mine) # point it at the mine, wherever it is
         render.setLight(self.spot) # use the spot as the lighting for the rendered scene
 
-        self.labelText = OnscreenText(text=("uptime: {}".format(0.0)+"\n{}".format(self.mine.getPos())+"\n{}".format(self.mine.getHpr())), # generate a text object for the label
+        self.labelText = OnscreenText(text=("light: {}".format(self.spot.getPos())+"\n{}".format(self.mine.getPos())+"\n{}".format(self.mine.getHpr())), # generate a text object for the label
             pos=(-0.75,-0.75), scale=0.07)
-
-        self.taskMgr.add(self.updateText, "updateText") # add the text update function to the looping task tree
-
-    def updateText(self, task):
-        self.labelText.setText("uptime: {}".format(task.time)+"\n{}".format(self.mine.getPos())+"\n{}".format(self.mine.getHpr())) # refresh these values onscreen
-        return Task.cont
 
 mineRender().run()
