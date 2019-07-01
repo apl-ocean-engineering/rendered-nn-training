@@ -40,7 +40,7 @@ class mineRender(ShowBase):
         self.spot.lookAt(self.mine) # point it at the mine, wherever it is
         render.setLight(self.spot) # use the spot as the lighting for the rendered scene
 
-        self.labelText = OnscreenText(text=("uptime: {}".format(0)+"\n{}".format(self.mine.getPos())+"\n{}".format(self.mine.getHpr())), # generate a text object for the label
+        self.labelText = OnscreenText(text=("uptime: {}".format(0.0)+"\n{}".format(self.mine.getPos())+"\n{}".format(self.mine.getHpr())), # generate a text object for the label
             pos=(-0.75,-0.75), scale=0.07)
 
         self.taskMgr.add(self.updateText, "updateText") # add the text update function to the looping task tree
