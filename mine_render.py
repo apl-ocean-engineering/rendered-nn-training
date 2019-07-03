@@ -2,7 +2,6 @@ import random, time, direct.directbase.DirectStart
 from math import *
 from direct.gui.OnscreenImage import OnscreenImage
 from direct.gui.OnscreenText import OnscreenText
-from PIL import Image
 from panda3d.core import *
 
 background = OnscreenImage(parent = render, image = "maps/NBL_images/{}.png".format(1)) # load background image
@@ -27,7 +26,7 @@ def renderToPNM():
 
         return image
 
-for i in range(10):
+for i in range(1):
     mine_x = random.uniform(-3,3)
     mine_y = random.uniform(5,15)
     mine_z = random.uniform(-2,2)
@@ -49,10 +48,13 @@ for i in range(10):
     spot.lookAt(mine) # point it at the mine, wherever it is
     render.setLight(spot) # use the spot as the lighting for the rendered scene
 
-    #labelText = OnscreenText(text=("pos: ("+str(round(mine.getX(), 3))+", "+str(round(mine.getY(), 3))+", "+str(round(mine.getZ(), 3))+")"),pos=(-0.75,-0.9),scale=0.07) # generate a text object for the label
+    labelText = OnscreenText(text=(str(mine.getTightBounds())),pos=(0.0,-1),scale=0.07) # generate a text object for the label
 
     path = "/home/caden/Pictures/renders/scene_{}.jpg".format(i)
-    renderToPNM().write(Filename(path))
-    print("generated "+path)
+    #renderToPNM().write(Filename(path))
+    #print("generated "+path)
+    mine.showTightBounds()
+    K = mine.getMat()
+    print K
 
-#base.run()
+base.run()
