@@ -41,11 +41,6 @@ def renderToPNM():
     return image
 
 def compute2dPosition(nodePath, point = Point3(0, 0, 0)):
-    """ Computes a 3-d point, relative to the indicated node, into a
-    2-d point as seen by the camera.  The range of the returned value
-    is based on the len's current film size and film offset, which is
-    (-1 .. 1) by default. """
-    
     # Convert the point into the camera's coordinate space
     p3d = base.cam.getRelativePoint(nodePath, point)
 
@@ -55,8 +50,7 @@ def compute2dPosition(nodePath, point = Point3(0, 0, 0)):
         # Got it!
         return p2d
 
-    # If project() returns false, it means the point was behind the
-    # lens.
+    # If project() returns false, it means the point was behind the lens.
     return None
 
 for i in range(1):
@@ -75,9 +69,9 @@ for i in range(1):
 
     mine.setPos(mine_x,mine_y,mine_z) # set random position
     mine.setHpr(mine_H,mine_p,mine_r) # set random orientation
-
-    x_pos = (mine.getPos()[0]*f/mine.getPos()[1]) + 1
-    y_pos = (mine.getPos()[2]*(-f)/mine.getPos()[1]) + 1
+    projectedPos = compute2dPosition(mine, (0,0,0))
+    scaled_x = projectedPos[0]+1
+    scaled_y = (-1)*projectedPos[1]+1
 
     scene_id = random.randint(0,381)
     background = OnscreenImage(parent = render2d, image = "maps/NBL_images/{}.png".format(scene_id)) # load background image
@@ -90,51 +84,37 @@ for i in range(1):
     #labelText = OnscreenText(text=(str(mine.getPos())),pos=(0.0,-0.9),scale=0.07) # generate a text object for the label
     #mine.showTightBounds() # draw 3D bounding box around model
 
-    box = OnscreenImage(image = '/home/caden/Downloads/box.png', parent = mine, scale = (1.35,1,1.35))
-    box.setTransparency(TransparencyAttrib.MAlpha)
-    box.setBillboardPointEye()
+    #box = OnscreenImage(image = '/home/caden/Downloads/box.png', parent = mine, scale = (1.35,1,1.35))
+    #box.setTransparency(TransparencyAttrib.MAlpha)
+    #box.setBillboardPointEye()
 
     path = "/home/caden/Pictures/mines/images/scene_{}.jpg".format(i)
     renderToPNM().write(Filename(path))
     print("generated "+path)
-    labelFile.write(str([0, x_pos/w, y_pos/h]))
+    labelFile.write(str([0, scaled_x, scaled_y]))
     labelFile.close()
-
-'''geomNodeCollection = mine.findAllMatches('**/+GeomNode')
-for nodePath in geomNodeCollection:
-    geomNode = nodePath.node()
-    for vertex in range(geomNode.getNumGeoms()):
-        geom = geomNode.getGeom(vertex)
-        state = geomNode.getGeomState(vertex)
-    print geom
-    #print state'''
-
-geomNodeCollection = mine.findAllMatches( '**/+GeomNode' )
-geomNodePath = geomNodeCollection[0]
-geomNode = geomNodePath.node()
-geom = geomNode.getGeom(0)
-vData = geom.getVertexData()
-reader_vertex = GeomVertexReader( vData, 'vertex' )
-reader_normal = GeomVertexReader( vData, 'normal' )
 
 vertexList = list()
 normalList = list()
-
-for i in xrange( 2000 ) :
-
-    vertex = reader_vertex.getData3f()
-    normal = reader_normal.getData3f()
-
-    vertexList.append( vertex )
-    normalList.append( normal )
-
 projectedList = list()
+
+geomNodeCollection = mine.findAllMatches( '**/+GeomNode' ) # collect all geometry nodes
+for nodePath in geomNodeCollection: 
+    geomNode = nodePath.node()
+    for i in range(geomNode.getNumGeoms()): # for each object in the render
+        obj = geomNode.getGeom(i)
+        vData = obj.getVertexData() # pull the vertex data
+        vReader = GeomVertexReader(vData, 'vertex') # read the vertex data
+
+    while not vReader.isAtEnd(): # equivalent to: for i in range(len(list of vertices))
+        vertex = vReader.getData3f()
+        vertexList.append(vertex)
 
 for point in vertexList:
     projectedPoint = compute2dPosition(mine, point)
     if projectedPoint != None:
         projectedList.append(projectedPoint)
 
-print projectedList
+print (projectedList)
 
 #base.run()
