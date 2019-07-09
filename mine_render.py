@@ -12,7 +12,7 @@ mine.setScale(1,1,1) # set model size
 
 metalTex = loader.loadTexture('maps/bulkhead.jpg') # load model texture
 mine.setTexture(metalTex)
-mine.setColorScale(0,255,157,1)
+mine.setColorScale(114,200,122,1)
 
 light = Spotlight("slight")
 light.setColor((1, 1, 1, 0.01)) # set light color and intensity
@@ -40,7 +40,26 @@ def renderToPNM():
 
     return image
 
-for i in range(10):
+def compute2dPosition(nodePath, point = Point3(0, 0, 0)):
+    """ Computes a 3-d point, relative to the indicated node, into a
+    2-d point as seen by the camera.  The range of the returned value
+    is based on the len's current film size and film offset, which is
+    (-1 .. 1) by default. """
+    
+    # Convert the point into the camera's coordinate space
+    p3d = base.cam.getRelativePoint(nodePath, point)
+
+    # Ask the lens to project the 3-d point to 2-d.
+    p2d = Point2()
+    if base.camLens.project(p3d, p2d):
+        # Got it!
+        return p2d
+
+    # If project() returns false, it means the point was behind the
+    # lens.
+    return None
+
+for i in range(1):
     
     labelFile = open("/home/caden/Pictures/mines/labels/label_{}.txt".format(i), "w+")
     
@@ -81,13 +100,41 @@ for i in range(10):
     labelFile.write(str([0, x_pos/w, y_pos/h]))
     labelFile.close()
 
-geomNodeCollection = mine.findAllMatches('**/+GeomNode')
+'''geomNodeCollection = mine.findAllMatches('**/+GeomNode')
 for nodePath in geomNodeCollection:
     geomNode = nodePath.node()
     for vertex in range(geomNode.getNumGeoms()):
         geom = geomNode.getGeom(vertex)
         state = geomNode.getGeomState(vertex)
-    #print geom
-    #print state
+    print geom
+    #print state'''
+
+geomNodeCollection = mine.findAllMatches( '**/+GeomNode' )
+geomNodePath = geomNodeCollection[0]
+geomNode = geomNodePath.node()
+geom = geomNode.getGeom(0)
+vData = geom.getVertexData()
+reader_vertex = GeomVertexReader( vData, 'vertex' )
+reader_normal = GeomVertexReader( vData, 'normal' )
+
+vertexList = list()
+normalList = list()
+
+for i in xrange( 2000 ) :
+
+    vertex = reader_vertex.getData3f()
+    normal = reader_normal.getData3f()
+
+    vertexList.append( vertex )
+    normalList.append( normal )
+
+projectedList = list()
+
+for point in vertexList:
+    projectedPoint = compute2dPosition(mine, point)
+    if projectedPoint != None:
+        projectedList.append(projectedPoint)
+
+print projectedList
 
 #base.run()
