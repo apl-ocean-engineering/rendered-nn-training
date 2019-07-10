@@ -4,8 +4,6 @@ from direct.gui.OnscreenImage import OnscreenImage
 from direct.gui.OnscreenText import OnscreenText
 from panda3d.core import *
 
-#background = OnscreenImage(parent = render) # load background image
-
 mine = loader.loadModel("mine") # load model
 mine.reparentTo(render) # add model to scene
 mine.setScale(1,1,1) # set model size
@@ -15,7 +13,7 @@ metalTex = loader.loadTexture('maps/bulkhead.jpg') # load model texture
 mine.setColor(114,200,122,1)
 
 light = Spotlight("slight")
-light.setColor((1, 1, 1, 1)) # set light color and intensity
+light.setColor((1.51/2.0, 1.60/2.0, 1.59/2.0, 1)) # set light color and intensity
 spot = render.attachNewNode(light)
 
 camLens = camera.getChild(0).node().getLens()
@@ -27,8 +25,8 @@ camLens.setFilmSize(2048, 1536)
 M = camLens.getProjectionMat()
 f = camLens.getFocalLength()
 r = camLens.getAspectRatio()
-w = camLens.getFilmSize()[0]
-h = camLens.getFilmSize()[1]
+w = int(camLens.getFilmSize()[0])
+h = int(camLens.getFilmSize()[1])
 
 def renderToPNM():
     base.graphicsEngine.renderFrame() # Render the frame
@@ -52,10 +50,11 @@ def compute2dPosition(nodePath, point):
     # If project() returns false, it means the point was behind the lens.
     return None
 
-for i in range(10):
-    
-    labelFile = open("/home/caden/Pictures/mines/labels/label_{}.txt".format(i), "w+")
-    
+for i in range(1):
+    props = WindowProperties() 
+    props.setSize(w, h) 
+    base.win.requestProperties(props) 
+
     mine_x = random.uniform(-3,3)
     mine_y = random.uniform(5,10)
     mine_z = random.uniform(-2,2)
@@ -69,8 +68,8 @@ for i in range(10):
     mine.setPos(mine_x,mine_y,mine_z) # set random position
     mine.setHpr(mine_H,mine_p,mine_r) # set random orientation
     projectedPos = compute2dPosition(mine, (0,0,0))
-    scaled_x = (projectedPos[0]+1)/2
-    scaled_y = ((-1)*projectedPos[1]+1)/2
+    xCenter = (projectedPos[0]+1.0)/2.0
+    yCenter = ((-1.0)*projectedPos[1]+1.0)/2.0
 
     scene_id = random.randint(0,381)
     background = OnscreenImage(parent = render2d, image = "maps/NBL_images/{}.png".format(scene_id)) # load background image
@@ -81,11 +80,7 @@ for i in range(10):
     mine.setLight(spot) # use the spot as the lighting for the rendered scene
 
     #labelText = OnscreenText(text=(str(mine.getPos())),pos=(0.0,-0.9),scale=0.07) # generate a text object for the label
-    #mine.showTightBounds() # draw 3D bounding box around model
-
-    box = OnscreenImage(image = '/home/caden/Downloads/box.png', parent = mine, scale = (1.36,1,1.36))
-    box.setTransparency(TransparencyAttrib.MAlpha)
-    box.setBillboardPointEye()
+    minbound, maxbound = mine.getTightBounds() # draw 3D bounding box around model
 
     vertexList = list()
     normalList = list()
@@ -112,19 +107,21 @@ for i in range(10):
     ymax = max(projectedList, key=lambda item: item[1])[1]
     xmin = min(projectedList, key=lambda item: item[0])[0]
     ymin = min(projectedList, key=lambda item: item[1])[1]
+    
+    box_w = xmax-xmin
+    box_h = ymax-ymin
+    box_center = LPoint2f(((xmin+(0.5*box_w))+1.0)/2.0,((-1)*(ymin+(0.5*box_h))+1.0)/2.0)
 
     line_node = GeomNode("lines")
     line_path = render2d.attach_new_node(line_node)
-
+    
     segs = LineSegs()
-    segs.move_to(xmin, 0, ymin)
-    segs.draw_to(xmax, 0, ymin)
-    segs.draw_to(xmax, 0, ymax)
-    segs.draw_to(xmin, 0, ymax)
-    segs.draw_to(xmin, 0, ymin)
-
-    box_w = xmax-xmin
-    box_h = ymax-ymin
+    segs.moveTo(xmin, 0, ymin)
+    segs.drawTo(xmax, 0, ymin)
+    segs.drawTo(xmax, 0, ymax)
+    segs.drawTo(xmin, 0, ymax)
+    segs.drawTo(xmin, 0, ymin)
+    print(xmin,ymin,xmax,ymax)
 
     line_node.remove_all_geoms()
     segs.create(line_node)
@@ -132,7 +129,8 @@ for i in range(10):
     path = "/home/caden/Pictures/mines/images/scene_{}.jpg".format(i)
     renderToPNM().write(Filename(path))
     print("generated "+path)
-    labelFile.write(str([0, scaled_x, scaled_y, box_w, box_h]))
+    labelFile = open("/home/caden/Pictures/mines/labels/scene_{}.txt".format(i), "w+")
+    labelFile.write(str(0)+" "+str(xCenter)+" "+str(yCenter)+" "+str(box_w)+" "+str(box_h))
     labelFile.close()
 
-#base.run()
+base.run()
