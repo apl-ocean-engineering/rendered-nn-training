@@ -4,11 +4,11 @@ from direct.gui.OnscreenImage import OnscreenImage
 from direct.gui.OnscreenText import OnscreenText
 from panda3d.core import *
 
-mine = loader.loadModel("mine") # load model
+mine = loader.loadModel("/home/caden/.local/lib/python2.7/site-packages/panda3d/models/mine.egg") # load model
 mine.reparentTo(render) # add model to scene
 mine.setScale(1,1,1) # set model size
 
-metalTex = loader.loadTexture('maps/bulkhead.jpg') # load model texture
+metalTex = loader.loadTexture('/home/caden/.local/lib/python2.7/site-packages/panda3d/models/maps/bulkhead.jpg') # load model texture
 #mine.setTexture(metalTex)
 mine.setColor(114,200,122,1)
 
@@ -47,7 +47,7 @@ def compute2dPosition(nodePath, point):
         # Got it!
         return p2d
 
-    # If project() returns false, it means the point was behind the lens.
+    # returning False signifies that the point was outside the FOV
     return None
 
 for i in range(1):
@@ -72,7 +72,7 @@ for i in range(1):
     yCenter = ((-1.0)*projectedPos[1]+1.0)/2.0
 
     scene_id = random.randint(0,381)
-    background = OnscreenImage(parent = render2d, image = "maps/NBL_images/{}.png".format(scene_id)) # load background image
+    #background = OnscreenImage(parent = render2d, image = "maps/NBL_images/{}.png".format(scene_id)) # load background image
     base.cam2d.node().getDisplayRegion(0).setSort(-1) # make sure it renders behind everything else
 
     spot.setPos(light_x,light_y,light_z) # set random position
@@ -121,11 +121,17 @@ for i in range(1):
     segs.drawTo(xmax, 0, ymax)
     segs.drawTo(xmin, 0, ymax)
     segs.drawTo(xmin, 0, ymin)
-    print(xmin,ymin,xmax,ymax)
 
+    cloud = LineSegs()
+    for point in projectedList:
+        cloud.moveTo(point[0],0,point[1])
+    
     line_node.remove_all_geoms()
     segs.create(line_node)
+    cloud.create(line_node)
 
+    mine.setPos(0,10,0)
+    spot.lookAt(mine)
     path = "/home/caden/Pictures/mines/images/scene_{}.jpg".format(i)
     renderToPNM().write(Filename(path))
     print("generated "+path)
