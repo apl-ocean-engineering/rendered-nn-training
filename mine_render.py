@@ -72,54 +72,25 @@ for i in range(1):
     yCenter = ((-1.0)*projectedPos[1]+1.0)/2.0
 
     scene_id = random.randint(0,381)
-    #background = OnscreenImage(parent = render2d, image = "maps/NBL_images/{}.png".format(scene_id)) # load background image
+    background = OnscreenImage(parent = render2d, image = "/home/caden/.local/lib/python2.7/site-packages/panda3d/models/maps/NBL_images/{}.png".format(scene_id)) # load background image
     base.cam2d.node().getDisplayRegion(0).setSort(-1) # make sure it renders behind everything else
 
     spot.setPos(light_x,light_y,light_z) # set random position
     spot.lookAt(mine) # point it at the mine, wherever it is
     mine.setLight(spot) # use the spot as the lighting for the rendered scene
 
-    #labelText = OnscreenText(text=(str(mine.getPos())),pos=(0.0,-0.9),scale=0.07) # generate a text object for the label
-    minbound, maxbound = mine.getTightBounds() # draw 3D bounding box around model
-
-    vertexList = list()
-    normalList = list()
-    projectedList = list()
-
-    geomNodeCollection = mine.findAllMatches( '**/+GeomNode' ) # collect all geometry nodes
-    for nodePath in geomNodeCollection: 
-        geomNode = nodePath.node()
-        for geom in range(geomNode.getNumGeoms()): # for each object in the render
-            obj = geomNode.getGeom(geom)
-            vData = obj.getVertexData() # pull the vertex data
-            vReader = GeomVertexReader(vData, 'vertex') # read the vertex data
-
-        while not vReader.isAtEnd(): # equivalent to: for i in range(len(list of vertices))
-            vertex = vReader.getData3f()
-            vertexList.append(vertex)
-
-    for point in vertexList:
-        projectedPoint = compute2dPosition(mine, point)
-        if projectedPoint != None:
-            projectedList.append(projectedPoint)
-
-    xmax = max(projectedList, key=lambda item: item[0])[0]
-    ymax = max(projectedList, key=lambda item: item[1])[1]
-    xmin = min(projectedList, key=lambda item: item[0])[0]
-    ymin = min(projectedList, key=lambda item: item[1])[1]
-    
-    box_w = xmax-xmin
-    box_h = ymax-ymin
-    box_center = LPoint2f(((xmin+(0.5*box_w))+1.0)/2.0,((-1)*(ymin+(0.5*box_h))+1.0)/2.0)
-    
     proj_dummy = base.cam.attach_new_node("proj-dummy")
     line_node = GeomNode("lines")
     line_path = render2d.attach_new_node(line_node)
     
     proj_mat = base.cam.node().get_lens().get_projection_mat_inv()
-    proj_dummy.set_transform(TransformState.make_mat(proj_mat))
+    proj_dummy.set_transform(TransformState.makeMat(proj_mat))
 
     min, max = mine.get_tight_bounds(proj_dummy)
+    
+    box_w = (max[0] - min[0])/2
+    box_h = (max[1] - min[1])/2
+    box_center = LPoint2f(((min[0]+(0.5*box_w))+1.0)/2.0,((-1)*(min[1]+(0.5*box_h))+1.0)/2.0)
 
     segs = LineSegs()
     segs.move_to(min[0], 0, min[1])
@@ -138,4 +109,4 @@ for i in range(1):
     labelFile.write(str(0)+" "+str(xCenter)+" "+str(yCenter)+" "+str(box_w)+" "+str(box_h))
     labelFile.close()
 
-base.run()
+#base.run()
