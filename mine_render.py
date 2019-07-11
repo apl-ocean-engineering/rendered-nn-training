@@ -111,27 +111,26 @@ for i in range(1):
     box_w = xmax-xmin
     box_h = ymax-ymin
     box_center = LPoint2f(((xmin+(0.5*box_w))+1.0)/2.0,((-1)*(ymin+(0.5*box_h))+1.0)/2.0)
-
+    
+    proj_dummy = base.cam.attach_new_node("proj-dummy")
     line_node = GeomNode("lines")
     line_path = render2d.attach_new_node(line_node)
     
-    segs = LineSegs()
-    segs.moveTo(xmin, 0, ymin)
-    segs.drawTo(xmax, 0, ymin)
-    segs.drawTo(xmax, 0, ymax)
-    segs.drawTo(xmin, 0, ymax)
-    segs.drawTo(xmin, 0, ymin)
+    proj_mat = base.cam.node().get_lens().get_projection_mat_inv()
+    proj_dummy.set_transform(TransformState.make_mat(proj_mat))
 
-    cloud = LineSegs()
-    for point in projectedList:
-        cloud.moveTo(point[0],0,point[1])
-    
+    min, max = mine.get_tight_bounds(proj_dummy)
+
+    segs = LineSegs()
+    segs.move_to(min[0], 0, min[1])
+    segs.draw_to(min[0], 0, max[1])
+    segs.draw_to(max[0], 0, max[1])
+    segs.draw_to(max[0], 0, min[1])
+    segs.draw_to(min[0], 0, min[1])
+
     line_node.remove_all_geoms()
     segs.create(line_node)
-    cloud.create(line_node)
 
-    mine.setPos(0,10,0)
-    spot.lookAt(mine)
     path = "/home/caden/Pictures/mines/images/scene_{}.jpg".format(i)
     renderToPNM().write(Filename(path))
     print("generated "+path)
