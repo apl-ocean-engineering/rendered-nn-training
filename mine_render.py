@@ -22,7 +22,7 @@ h = int(camLens.getFilmSize()[1])
 
 props = WindowProperties() 
 props.setSize(w, h) 
-base.win.requestProperties(props) 
+base.win.requestProperties(props)
 
 def renderToPNM():
     base.graphicsEngine.renderFrame() # Render the frame
@@ -36,13 +36,17 @@ def renderToPNM():
 def compute2dPosition(nodePath, point):
     p3d = base.cam.getRelativePoint(nodePath, point) # convert the point into the camera's coordinate space
 
-    p2d = Point2() # ask the lens to project the 3D point to 2D
+    p2d = Point2() # create a 2D point container
 
     if base.camLens.project(p3d, p2d): # returning False signifies that the point was outside the FOV
         return p2d
     return None
 
-for i in range(1):
+for i in range(5):
+    scene_id = random.randint(0,354)
+    #background = OnscreenImage(parent = render2d, image = "/home/caden/Pictures/backgrounds/bg_{}.png".format(scene_id)) # load background image
+    base.cam2d.node().getDisplayRegion(0).setSort(-1) # make sure it renders behind everything else
+    
     mine_x = random.uniform(-3.5,3.5)
     mine_y = random.uniform(5,10)
     mine_z = random.uniform(-2.5,2.5)
@@ -63,11 +67,7 @@ for i in range(1):
     projectedPos = compute2dPosition(mine, (0,0,0))
     #xCenter = (projectedPos[0]+1.0)/2.0
     #yCenter = ((-1.0)*projectedPos[1]+1.0)/2.0
-
-    scene_id = random.randint(0,354)
-    background = OnscreenImage(parent = render2d, image = "/home/caden/Pictures/backgrounds/bg_{}.png".format(scene_id)) # load background image
-    base.cam2d.node().getDisplayRegion(0).setSort(-1) # make sure it renders behind everything else
-
+    
     light.setColor((light_R/255, light_G/255, light_B/255, 1)) # set light color and intensity
     spot = render.attachNewNode(light)
     spot.setPos(light_x,light_y,light_z) # set random position
@@ -87,7 +87,7 @@ for i in range(1):
     box_h = (max[1] - min[1])/2
     xCenter, yCenter = ((min[0]+(0.5*box_w))+1.0)/2.0, ((-1)*(min[1]+(0.5*box_h))+1.0)/2.0
     
-    '''segs = LineSegs()
+    segs = LineSegs()
     segs.move_to(min[0], 0, min[1])
     segs.draw_to(min[0], 0, max[1])
     segs.draw_to(max[0], 0, max[1])
@@ -95,12 +95,11 @@ for i in range(1):
     segs.draw_to(min[0], 0, min[1])
 
     line_node.remove_all_geoms()
-    segs.create(line_node)'''
+    segs.create(line_node)
     
     imageFile = "/home/caden/Pictures/replacements/images/scene_{}.jpg".format(i)
-    renderToPNM().write(Filename(imageFile))
-    if i//10 == i/10.0:
-        print("generated "+imageFile)
+    #renderToPNM().write(Filename(imageFile))
+    print("generated "+imageFile)
     labelFile = open("/home/caden/Pictures/replacements/labels/scene_{}.txt".format(i), "w+")
     labelFile.write(str(0)+" "+str(xCenter)+" "+str(yCenter)+" "+str(box_w)+" "+str(box_h))
     labelFile.close()
