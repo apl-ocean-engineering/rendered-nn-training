@@ -67,7 +67,7 @@ for i in range(5):
     projectedPos = compute2dPosition(mine, (0,0,0))
     #xCenter = (projectedPos[0]+1.0)/2.0
     #yCenter = ((-1.0)*projectedPos[1]+1.0)/2.0
-    
+
     light.setColor((light_R/255, light_G/255, light_B/255, 1)) # set light color and intensity
     spot = render.attachNewNode(light)
     spot.setPos(light_x,light_y,light_z) # set random position
@@ -98,7 +98,7 @@ for i in range(5):
     segs.create(line_node)
     
     imageFile = "/home/caden/Pictures/replacements/images/scene_{}.jpg".format(i)
-    #renderToPNM().write(Filename(imageFile))
+    renderToPNM().write(Filename(imageFile))
     print("generated "+imageFile)
     labelFile = open("/home/caden/Pictures/replacements/labels/scene_{}.txt".format(i), "w+")
     labelFile.write(str(0)+" "+str(xCenter)+" "+str(yCenter)+" "+str(box_w)+" "+str(box_h))
