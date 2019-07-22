@@ -42,7 +42,13 @@ def compute2dPosition(nodePath, point):
         return p2d
     return None
 
-for i in range(5):
+def coordToImagespace(coord):
+    x = (coord[0]+1)/2
+    y = 0
+    z = (((-1)*coord[2])+1)/2
+    return LPoint3f(x,y,z)
+
+for i in range(4):
     scene_id = random.randint(0,354)
     #background = OnscreenImage(parent = render2d, image = "/home/caden/Pictures/backgrounds/bg_{}.png".format(scene_id)) # load background image
     base.cam2d.node().getDisplayRegion(0).setSort(-1) # make sure it renders behind everything else
@@ -81,27 +87,33 @@ for i in range(5):
     proj_mat = camLens.get_projection_mat_inv() # read the lens' inverse projection matrix
     proj_dummy.set_transform(TransformState.makeMat(proj_mat)) # set it as the matrix for the projected dummy
 
-    min, max = mine.get_tight_bounds(proj_dummy) # get the bounding coordinates in 2D
+    min, max = mine.get_tight_bounds(proj_dummy) # get the bounding coordinates of the projection
+    box_LL, box_UR = LPoint3f(min[0],0,min[1]), LPoint3f(max[0],0,max[1]) # coordinates in 2-space of the corners
+    diagonal = LVector3f(box_UR - box_LL)
 
-    box_w = (max[0] - min[0])/2
-    box_h = (max[1] - min[1])/2
-    xCenter, yCenter = ((min[0]+(0.5*box_w))+1.0)/2.0, ((-1)*(min[1]+(0.5*box_h))+1.0)/2.0
-    
+    box_w = (max[0] - min[0])
+    box_h = (max[1] - min[1])
+    center = LPoint3f(min[0]+box_w/2,0,min[1]+(box_h/2))
+    print diagonal, center
+
     segs = LineSegs()
-    segs.move_to(min[0], 0, min[1])
+    segs.move_to(box_LL)
     segs.draw_to(min[0], 0, max[1])
-    segs.draw_to(max[0], 0, max[1])
+    segs.draw_to(box_UR)
     segs.draw_to(max[0], 0, min[1])
     segs.draw_to(min[0], 0, min[1])
 
+    segs.move_to(box_LL)
+    segs.draw_to(center)
+
     line_node.remove_all_geoms()
     segs.create(line_node)
-    
+
     imageFile = "/home/caden/Pictures/replacements/images/scene_{}.jpg".format(i)
     renderToPNM().write(Filename(imageFile))
     print("generated "+imageFile)
     labelFile = open("/home/caden/Pictures/replacements/labels/scene_{}.txt".format(i), "w+")
-    labelFile.write(str(0)+" "+str(xCenter)+" "+str(yCenter)+" "+str(box_w)+" "+str(box_h))
+    labelFile.write(str(0)+" "+str(coordToImagespace(center)[0])+" "+str(coordToImagespace(center)[2])+" "+str(box_w/2)+" "+str(box_h/2))
     labelFile.close()
 
-    #base.run()
+    base.run()

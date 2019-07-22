@@ -32,7 +32,13 @@ def update_bg(task):
 
     return task.cont
 
-def reposition(task):
+def coordToImagespace(coord):
+    x = (coord[0]+1)/2
+    y = 0
+    z = (((-1)*coord[2])+1)/2
+    return LPoint3f(x,y,z)
+
+def rerender(task):
     mine_x = random.uniform(-3.5,3.5)
     mine_y = random.uniform(5,10)
     mine_z = random.uniform(-2.5,2.5)
@@ -56,10 +62,7 @@ def reposition(task):
     spot.setPos(light_x,light_y,light_z) # set random position
     spot.lookAt(mine) # point it at the mine, wherever it is
     mine.setLight(spot) # use the spot as the lighting for the rendered scene
-
-    return task.cont
-
-def project_write(task):
+    
     proj_dummy = base.cam.attach_new_node("proj-dummy") # create a new node to hold the projected model
     line_node = GeomNode("lines")
     line_path = render2d.attach_new_node(line_node)
@@ -67,39 +70,44 @@ def project_write(task):
     proj_mat = camLens.get_projection_mat_inv() # read the lens' inverse projection matrix
     proj_dummy.set_transform(TransformState.makeMat(proj_mat)) # set it as the matrix for the projected dummy
 
-    min, max = mine.get_tight_bounds(proj_dummy) # get the bounding coordinates in 2D
+    min, max = mine.get_tight_bounds(proj_dummy) # get the bounding coordinates of the projection
+    box_LL, box_UR = LPoint3f(min[0],0,min[1]), LPoint3f(max[0],0,max[1]) # coordinates in 2-space of the corners
+    diagonal = LVector3f(box_UR - box_LL)
 
-    box_w = (max[0] - min[0])/2
-    box_h = (max[1] - min[1])/2
-    xCenter, yCenter = ((min[0]+(0.5*box_w))+1.0)/2.0, ((-1)*(min[1]+(0.5*box_h))+1.0)/2.0
-    
-    segs = LineSegs()
-    segs.move_to(min[0], 0, min[1])
+    box_w = (max[0] - min[0])
+    box_h = (max[1] - min[1])
+    center = LPoint3f(min[0]+box_w/2,0,min[1]+(box_h/2))
+
+    '''segs = LineSegs()
+    segs.move_to(box_LL)
     segs.draw_to(min[0], 0, max[1])
-    segs.draw_to(max[0], 0, max[1])
+    segs.draw_to(box_UR)
     segs.draw_to(max[0], 0, min[1])
     segs.draw_to(min[0], 0, min[1])
 
+    segs.move_to(box_LL)
+    segs.draw_to(center)
+
     line_node.remove_all_geoms()
-    #segs.create(line_node)
+    segs.create(line_node)'''
 
     count = task.frame
 
-    base.camNode.getDisplayRegion(0).getScreenshot(PNMImage()) # grab a PNM screenshot of the display region
+    image = PNMImage() # create PNMImage wrapper
+    base.camNode.getDisplayRegion(0).getScreenshot(image) # grab a PNM screenshot of the display region
     imageFile = "/home/caden/Pictures/replacements/images/scene_{}.jpg".format(count) # set the filename
-    PNMImage().write(Filename(imageFile)) # write the previously taken screenshot to the above file
-    print("generated "+imageFile)
-    labelFile = open("/home/caden/Pictures/replacements/labels/scene_{}.txt".format(count), "w+") # create the label file
-    labelFile.write(str(0)+" "+str(xCenter)+" "+str(yCenter)+" "+str(box_w)+" "+str(box_h)) # write metadata to label file
+    image.write(Filename(imageFile)) # write the previously taken screenshot to the above file
+    if task.frame//10 == task.frame/10.0: print("generated "+imageFile)
+    labelFile = open("/home/caden/Pictures/replacements/labels/scene_{}.txt".format(count+1), "w+") # create the label file (I don't know why I have to add 1 to the name to make it match with the right image, but I do)
+    labelFile.write(str(0)+" "+str(coordToImagespace(center)[0])+" "+str(coordToImagespace(center)[2])+" "+str(box_w/2)+" "+str(box_h/2))
     labelFile.close()
     
-    if count < 100:
+    if count < 20:
         return task.cont
     else:
+        print "Render complete."
         return task.done
 
 base.taskMgr.add(update_bg, "background")
-base.taskMgr.add(reposition, "reposition")
-base.taskMgr.add(project_write, "project/write")
-
+base.taskMgr.add(rerender, "render")
 base.run()
