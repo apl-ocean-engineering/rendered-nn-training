@@ -102,7 +102,7 @@ def rerender(task):
     labelFile.write(str(0)+" "+str(coordToImagespace(center)[0])+" "+str(coordToImagespace(center)[2])+" "+str(box_w/2)+" "+str(box_h/2))
     labelFile.close()
     
-    if count < 20:
+    if count < 2000:
         return task.cont
     else:
         print "Render complete."
