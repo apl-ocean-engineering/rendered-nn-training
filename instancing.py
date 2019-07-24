@@ -13,7 +13,7 @@ def renderToPNM():
 
     return image
 
-mine = loader.loadModel("/home/caden/.local/lib/python2.7/site-packages/panda3d/models/mine.egg") 
+mine = loader.loadModel("mine.egg") 
 mineParent = render.attachNewNode('mineParent')
 
 light = Spotlight("slight")
@@ -35,18 +35,38 @@ for i in range(1):
     scene_id = random.randint(0,354)
     #background = OnscreenImage(parent = render2d, image = "/home/caden/Pictures/backgrounds/bg_{}.png".format(scene_id)) # load background image
     base.cam2d.node().getDisplayRegion(0).setSort(-1) # make sure it renders behind everything else
+    
+    proj_dummy = base.cam.attach_new_node("proj-dummy") # create a new node to hold the projected model
+    line_node = GeomNode("lines")
+    line_path = render2d.attach_new_node(line_node)
+    proj_mat = camLens.get_projection_mat_inv() # read the lens' inverse projection matrix
 
-    num_mines = int(random.triangular(1,3,1))
+    min, max = mine.get_tight_bounds(proj_dummy) # get the bounding coordinates of the projection
+    num_mines = 3#int(random.triangular(1,3,1))
     for n in range(num_mines):
         minePlacer = mineParent.attachNewNode("minePlacer")
         mineInstance = mine.instanceTo(minePlacer)
         minePlacer.setPos(random.uniform(-3.5,3.5),random.uniform(5,10),random.uniform(-2.5,2.5)) # set random position
         minePlacer.setHpr(random.uniform(-180,180),random.uniform(-180,180),random.uniform(-180,180)) # set random orientation
 
+        proj_dummy.set_transform(TransformState.makeMat(proj_mat)) # set it as the matrix for the projected dummy
+        min, max = minePlacer.get_tight_bounds(proj_dummy) # get the bounding coordinates of the projection
+        
+        segs = LineSegs()
+        segs.move_to(min[0], 0, min[1])
+        segs.draw_to(min[0], 0, max[1])
+        segs.draw_to(max[0], 0, max[1])
+        segs.draw_to(max[0], 0, min[1])
+        segs.draw_to(min[0], 0, min[1])
+
+        #line_node.remove_all_geoms()
+        segs.create(line_node)
+
         light.setColor((random.uniform(155,170)/255, random.uniform(175,185)/255, random.uniform(155,170)/255, 1)) # set light color and intensity
         spot = render.attachNewNode(light)
         spot.setPos(random.uniform(-10,10),random.uniform(-5,minePlacer.getPos()[1]),random.uniform(-10,10)) # set random position
         spot.lookAt(minePlacer) # point it at the mine, wherever it is
         minePlacer.setLight(spot) # assign the light to the mine
-
+        
+print(mineInstance)
 base.run()
