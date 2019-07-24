@@ -13,24 +13,16 @@ camLens.setFilmSize(2048, 1536)
 M = camLens.getProjectionMat()
 f = camLens.getFocalLength()
 r = camLens.getAspectRatio()
-w = int(camLens.getFilmSize()[0])
-h = int(camLens.getFilmSize()[1])
+w, h = int(camLens.getFilmSize()[0]), int(camLens.getFilmSize()[1])
 
 props = WindowProperties() 
 props.setSize(w, h) 
 base.win.requestProperties(props)
 
-mine = loader.loadModel("/home/caden/.local/lib/python2.7/site-packages/panda3d/models/mine.egg") # load model
+mine = loader.loadModel("mine.egg") # load model
 mine.reparentTo(render) # add model to scene
 
 light = Spotlight("slight") # create lighting container
-
-def update_bg(task):
-    scene_id = random.randint(0,354)
-    background = OnscreenImage(parent = render2d, image = "/home/caden/Pictures/backgrounds/bg_{}.png".format(scene_id)) # load background image
-    base.cam2d.node().getDisplayRegion(0).setSort(-20) # make sure it renders behind everything else
-
-    return task.cont
 
 def coordToImagespace(coord):
     x = (coord[0]+1)/2
@@ -39,6 +31,10 @@ def coordToImagespace(coord):
     return LPoint3f(x,y,z)
 
 def rerender(task):
+    scene_id = random.randint(0,354)
+    background = OnscreenImage(parent = render2d, image = "/home/caden/Pictures/backgrounds/bg_{}.png".format(scene_id)) # load background image
+    base.cam2d.node().getDisplayRegion(0).setSort(-20) # make sure it renders behind everything else
+    
     mine_x = random.uniform(-3.5,3.5)
     mine_y = random.uniform(5,10)
     mine_z = random.uniform(-2.5,2.5)
@@ -91,14 +87,14 @@ def rerender(task):
     line_node.remove_all_geoms()
     segs.create(line_node)'''
 
-    count = task.frame
+    count = task.frame+1901
 
     image = PNMImage() # create PNMImage wrapper
     base.camNode.getDisplayRegion(0).getScreenshot(image) # grab a PNM screenshot of the display region
-    imageFile = "/home/caden/Pictures/replacements/images/scene_{}.jpg".format(count) # set the filename
+    imageFile = "/home/caden/Pictures/replacements/images/scene_{}.jpg".format(count-1) # set the filename (don't know why images and labels are 1 offset, but they are)
     image.write(Filename(imageFile)) # write the previously taken screenshot to the above file
-    if task.frame//10 == task.frame/10.0: print("generated "+imageFile)
-    labelFile = open("/home/caden/Pictures/replacements/labels/scene_{}.txt".format(count+1), "w+") # create the label file (I don't know why I have to add 1 to the name to make it match with the right image, but I do)
+    if task.frame//10 == task.frame/10.0: print("generated "+imageFile+"\n...")
+    labelFile = open("/home/caden/Pictures/replacements/labels/scene_{}.txt".format(count), "w+") # create the label file 
     labelFile.write(str(0)+" "+str(coordToImagespace(center)[0])+" "+str(coordToImagespace(center)[2])+" "+str(box_w/2)+" "+str(box_h/2))
     labelFile.close()
     
@@ -108,6 +104,5 @@ def rerender(task):
         print "Render complete."
         return task.done
 
-base.taskMgr.add(update_bg, "background")
 base.taskMgr.add(rerender, "render")
 base.run()
