@@ -87,18 +87,18 @@ def rerender(task):
     line_node.remove_all_geoms()
     segs.create(line_node)'''
 
-    count = task.frame+1901
+    count = task.frame+5990
 
     image = PNMImage() # create PNMImage wrapper
     base.camNode.getDisplayRegion(0).getScreenshot(image) # grab a PNM screenshot of the display region
-    imageFile = "/home/caden/Pictures/replacements/images/scene_{}.jpg".format(count-1) # set the filename (don't know why images and labels are 1 offset, but they are)
-    image.write(Filename(imageFile)) # write the previously taken screenshot to the above file
+    imageFile = "/home/caden/Pictures/mines2/images/scene_{}.jpg".format(count-1) # set the filename (don't know why images and labels are 1 offset, but they are)
+    image.write(Filename(imageFile)) # write the screenshot to the above file
     if task.frame//10 == task.frame/10.0: print("generated "+imageFile+"\n...")
-    labelFile = open("/home/caden/Pictures/replacements/labels/scene_{}.txt".format(count), "w+") # create the label file 
+    labelFile = open("/home/caden/Pictures/mines2/labels/scene_{}.txt".format(count), "w+") # create the label file 
     labelFile.write(str(0)+" "+str(coordToImagespace(center)[0])+" "+str(coordToImagespace(center)[2])+" "+str(box_w/2)+" "+str(box_h/2))
     labelFile.close()
     
-    if count < 2000:
+    if count < 10000:
         return task.cont
     else:
         print "Render complete."
