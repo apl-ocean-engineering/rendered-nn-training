@@ -18,8 +18,8 @@ camLens.setFilmSize(2048, 1536)
 M = camLens.getProjectionMat()
 f = camLens.getFocalLength()
 r = camLens.getAspectRatio()
-w = int(camLens.getFilmSize()[0])
-h = int(camLens.getFilmSize()[1])
+w = int(camLens.getFilmSize().getX())
+h = int(camLens.getFilmSize().getY())
 
 props = WindowProperties() 
 props.setSize(w, h) 
@@ -35,7 +35,7 @@ def rerender(task):
     line_path = render2d.attach_new_node(line_node)
     proj_mat = camLens.get_projection_mat_inv() # read the lens' inverse projection matrix
 
-    num_mines = 3#int(random.triangular(1,3,1))
+    num_mines = 1#int(random.triangular(1,3,1))
     count = task.frame
     labelFile = open("/home/caden/Pictures/mines2/labels/scene_{}.txt".format(count), "w+") # create the label file 
 
@@ -72,15 +72,18 @@ def rerender(task):
         spot.lookAt(minePlacer) # point it at the mine, wherever it is
         minePlacer.setLight(spot) # assign the light to the mine
 
-        print >>labelFile, str(0)+" "+str(coordToImagespace(center)[0])+" "+str(coordToImagespace(center)[1])+" "+str(box_w/2)+" "+str(box_h/2)
-
+        print >>labelFile, str(0)+" "+str(coordToImagespace(center).getX())+" "+str(coordToImagespace(center).getY())+" "+str(box_w/2)+" "+str(box_h/2)
+    
     image = PNMImage() # create PNMImage wrapper
     base.camNode.getDisplayRegion(0).getScreenshot(image) # grab a PNM screenshot of the display region
     imageFile = "/home/caden/Pictures/mines2/images/scene_{}.jpg".format(count-1) # set the filename (don't know why images and labels are 1 offset, but they are)
     image.write(Filename(imageFile)) # write the screenshot to the above file
     labelFile.close()
     
-    mineParent.removeNode()
+    mineParent.detachNode()
+    minePlacer.detachNode()
+    #mine.removeNode()
+    mineInstance.detachNode()
 
     if count < 10:
         return task.cont
