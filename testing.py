@@ -18,6 +18,9 @@ r = camLens.getAspectRatio()
 w = int(camLens.getFilmSize().getX())
 h = int(camLens.getFilmSize().getY())
 
+mines = []
+for i in range(3): mines.append(loader.loadModel("mine.egg")); mines[i].reparentTo(render); mines[i].hide()
+
 props = WindowProperties() 
 props.setSize(w, h) 
 base.win.requestProperties(props)
@@ -27,7 +30,6 @@ def rerender():
     #background = OnscreenImage(parent = render2d, image = "/home/caden/Pictures/backgrounds/bg_{}.png".format(scene_id)) # load background image
     base.cam2d.node().getDisplayRegion(0).setSort(-1) # make sure it renders behind everything else
     
-    mines = []
     lights = []
     spot = []
     metadata = []
@@ -39,11 +41,11 @@ def rerender():
 
     count = 1
     labelFile = open("/home/caden/Pictures/mines2/labels/scene_{}.txt".format(count), "w+") # create the label file 
-    num_mines = random.randint(1,3)
+    num_mines = 2#random.randint(1,3)
 
     for i in range(num_mines):
-        mines.append(loader.loadModel("mine.egg"))
-        mines[i].reparentTo(render)
+        #mines[i].reparentTo(render)
+        mines[i].show()
         lights.append(Spotlight("slight"))
 
         mines[i].setPos(random.uniform(-3.5,3.5),random.uniform(5,10),random.uniform(-2.5,2.5)) # set random position
@@ -74,6 +76,7 @@ def rerender():
         segs.create(line_node)
 
         metadata.append(str(0)+" "+str(coordToImagespace(center).getX())+" "+str(coordToImagespace(center).getY())+" "+str(box_w/2)+" "+str(box_h/2)+"\n")
+
     print(str(num_mines)+" mine(s) and metadata added.")
     print("Getting screenshot...")
     image = PNMImage() # create PNMImage wrapper
