@@ -17,6 +17,12 @@ f = camLens.getFocalLength()
 r = camLens.getAspectRatio()
 w = int(camLens.getFilmSize().getX())
 h = int(camLens.getFilmSize().getY())
+minMines = 0
+maxMines = 3
+mines = []
+for i in range(maxMines): mines.append(loader.loadModel("mine.egg")); mines[i].reparentTo(render); mines[i].hide()
+lights = []
+for i in range(maxMines): lights.append(Spotlight("slight"))
 
 props = WindowProperties() 
 props.setSize(w, h) 
@@ -24,13 +30,12 @@ base.win.requestProperties(props)
 
 def rerender(task):
     scene_id = random.randint(0,354)
-    #background = OnscreenImage(parent = render2d, image = "/home/caden/Pictures/backgrounds/bg_{}.png".format(scene_id)) # load background image
+    background = OnscreenImage(parent = render2d, image = "/home/caden/Pictures/backgrounds/bg_{}.png".format(scene_id)) # load background image
     base.cam2d.node().getDisplayRegion(0).setSort(-1) # make sure it renders behind everything else
     
-    mines = []
-    lights = []
     spot = []
     metadata = []
+    for mine in mines: mine.hide()
 
     proj_dummy = base.cam.attach_new_node("proj-dummy") # create a new node to hold the projected model
     line_node = GeomNode("lines")
@@ -39,12 +44,10 @@ def rerender(task):
 
     count = task.frame
     labelFile = open("/home/caden/Pictures/mines2/labels/scene_{}.txt".format(count), "w+") # create the label file 
-    num_mines = random.randint(1,3)
+    num_mines = random.randint(minMines,maxMines)
 
     for i in range(num_mines):
-        mines.append(loader.loadModel("mine.egg"))
-        mines[i].reparentTo(render)
-        lights.append(Spotlight("slight"))
+        mines[i].show()
 
         mines[i].setPos(random.uniform(-3.5,3.5),random.uniform(5,10),random.uniform(-2.5,2.5)) # set random position
         mines[i].setHpr(random.uniform(-180,180),random.uniform(-180,180),random.uniform(-180,180)) # set random orientation
@@ -74,10 +77,9 @@ def rerender(task):
         segs.create(line_node)
 
         metadata.append(str(0)+" "+str(coordToImagespace(center).getX())+" "+str(coordToImagespace(center).getY())+" "+str(box_w/2)+" "+str(box_h/2)+"\n")
-        print("Mine and metadata added.")
 
-    time.sleep(2)
-    print("Getting screenshot...")
+
+    print(str(num_mines)+" mines in scene. "+str(len(metadata))+" lines in labelFile.")
     image = PNMImage() # create PNMImage wrapper
     base.camNode.getDisplayRegion(0).getScreenshot(image) # grab a PNM screenshot of the display region
     imageFile = "/home/caden/Pictures/mines2/images/scene_{}.jpg".format(count-1) # set the filename (don't know why images and labels are 1 offset, but they are)
@@ -85,16 +87,9 @@ def rerender(task):
     labelFile.writelines(metadata) # write the label data to separate lines
     print("generated image: "+imageFile+" and label file: /home/caden/Pictures/mines2/labels/scene_{}.txt".format(count))
     labelFile.close()
+    line_node.remove_all_geoms()
 
-    print("Cleaning up...")
-    for mine in mines:
-        mine.removeNode()
-        line_node.remove_all_geoms()
-        time.sleep(1)
-    print("Removal complete. Rebuffering...")
-    time.sleep(2)
-
-    if count < 10:
+    if count < 4000:
         return task.cont
     else:
         print "Series complete."
