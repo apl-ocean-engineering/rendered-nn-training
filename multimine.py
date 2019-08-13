@@ -2,6 +2,7 @@ import random, time, direct.directbase.DirectStart
 from math import *
 from direct.gui.OnscreenImage import OnscreenImage
 from direct.gui.OnscreenText import OnscreenText
+from direct.filter.CommonFilters import CommonFilters
 from panda3d.core import *
 
 def coordToImagespace(coord): # converts from Panda's 3D coordinate system to a relative coordinate space (upper left is 0,0; bottom right is 1,1)
@@ -18,10 +19,14 @@ f = camLens.getFocalLength()
 r = camLens.getAspectRatio()
 w = int(camLens.getFilmSize().getX())
 h = int(camLens.getFilmSize().getY())
+filters3D = CommonFilters(base.win, base.cam)
+filters3D.setBlurSharpen(0.1)
+filters2D = CommonFilters(base.win, base.cam2d)
+filters2D.setBlurSharpen(1.0)
 minMines = 0 # the minimum number of mines that you ever want to appear
 maxMines = 3 # the maximum number of mines that you ever want to appear
-mines = []
-for i in range(maxMines): mines.append(loader.loadModel("mine.egg")); mines[i].reparentTo(render); mines[i].hide() # create a static array of mine models
+mines = [] # create a static array of mine models:
+for i in range(maxMines): mines.append(loader.loadModel("mine.egg")); mines[i].reparentTo(render); mines[i].hide()
 lights = []
 for i in range(maxMines): lights.append(Spotlight("slight")) # create corresponding lighting nodes for each mine
 
@@ -32,7 +37,7 @@ base.win.requestProperties(props) # assign the above properties to the current w
 def rerender(task):
     scene_id = random.randint(0,354) # however many candidates there are for background images
     background = OnscreenImage(parent = render2d, image = "/home/caden/Pictures/backgrounds/bg_{}.png".format(scene_id)) # load background image
-    base.cam2d.node().getDisplayRegion(0).setSort(-1) # make sure it renders behind everything else
+    base.cam2d.node().getDisplayRegion(0).setSort(-20) # make sure it renders behind everything else
     
     spot = [] # create & wipe array of spotlights for new render
     metadata = [] # wipe metadata for new render
