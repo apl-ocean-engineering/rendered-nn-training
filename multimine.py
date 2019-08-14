@@ -1,9 +1,32 @@
+#!/usr/bin/python
 import random, time, direct.directbase.DirectStart
 from math import *
+from sys import argv
 from direct.gui.OnscreenImage import OnscreenImage
 from direct.gui.OnscreenText import OnscreenText
 from direct.filter.CommonFilters import CommonFilters
 from panda3d.core import *
+
+# parse command line options (yes, this could be done more elegantly with argparse, but this keeps it more straightforward):
+if "-h" in argv or "--help" in argv:
+    print("\nUsage:\npython "+argv[0]+" [starting index] [ending index] [max # of mines per image]\n \nUse [-h] or [--help] to display this message. The render task may be aborted at any time with <Ctrl-C>\nSpecify arguments in this order only.\n")
+    go = False
+else:
+    go = True
+try:
+    start = int(argv[1])
+except:
+    start = 0
+try:
+    end = int(argv[2])
+except IndexError:
+    end = 10000
+try:
+    maxMines = int(argv[3])
+    minMines = 0
+except IndexError:
+    maxMines = 3
+    minMines = 0
 
 def coordToImagespace(coord): # converts from Panda's 3D coordinate system to a relative coordinate space (upper left is 0,0; bottom right is 1,1)
     x = (coord[0]+1)/2
@@ -23,8 +46,6 @@ filters3D = CommonFilters(base.win, base.cam)
 filters3D.setBlurSharpen(0.1)
 filters2D = CommonFilters(base.win, base.cam2d)
 filters2D.setBlurSharpen(1.0)
-minMines = 0 # the minimum number of mines that you ever want to appear
-maxMines = 3 # the maximum number of mines that you ever want to appear
 mines = [] # create a static array of mine models:
 for i in range(maxMines): mines.append(loader.loadModel("mine.egg")); mines[i].reparentTo(render); mines[i].hide()
 lights = []
@@ -49,7 +70,7 @@ def rerender(task):
     line_path = render2d.attach_new_node(line_node)
     proj_mat = camLens.get_projection_mat_inv() # read the lens' inverse projection matrix
 
-    count = task.frame + 2805   # this is how I had to do the counter variable since I couldn't find a way to natively keep track of what iteration the
+    count = task.frame + start   # this is how I had to do the counter variable since I couldn't find a way to natively keep track of what iteration the
                                 # Panda task 'rerender' is on, but since it creates a new image every frame, it works well enough to just count frames
     num_mines = random.randint(minMines,maxMines) # choose how many mines will appear in this scene
 
@@ -94,11 +115,12 @@ def rerender(task):
     labelFile.close()
     line_node.remove_all_geoms() # wipes the bounding boxes
 
-    if count < 6000:
+    if count < end:
         return task.cont
     else:
         print "Series complete."
         return task.done
 
-base.taskMgr.add(rerender, "render")
-base.run()
+if go:
+    base.taskMgr.add(rerender, "render")
+    base.run()
