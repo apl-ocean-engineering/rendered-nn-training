@@ -9,7 +9,7 @@ from panda3d.core import *
 
 # parse command line options (yes, this could be done more elegantly with argparse, but this keeps it more straightforward):
 if "-h" in argv or "--help" in argv:
-    print("\nUsage:\npython "+argv[0]+" [starting index] [ending index] [max # of mines per image]\n \nUse [-h] or [--help] to display this message. The render task may be aborted at any time with <Ctrl-C>\nSpecify arguments in this order only.\n")
+    print("\nUsage:\n\"python "+argv[0]+" [starting index] [ending index] [max # of mines per image]\"\n \nSpecify as many arguments as desired, but each must follow the preceding ones in this order to be parsed correctly.\nUse [-h] or [--help] to display this message. The render task may be aborted at any time with <Ctrl-C>\n\nYou may want to set your starting index a bit below where you actually want the series to begin, as the first few images often must be thrown out.\n")
     go = False
 else:
     go = True
@@ -44,8 +44,8 @@ w = int(camLens.getFilmSize().getX())
 h = int(camLens.getFilmSize().getY())
 filters3D = CommonFilters(base.win, base.cam)
 filters3D.setBlurSharpen(0.1)
-filters2D = CommonFilters(base.win, base.cam2d)
-filters2D.setBlurSharpen(1.0)
+#filters2D = CommonFilters(base.win, base.cam2d)
+#filters2D.setBlurSharpen(1.0)
 mines = [] # create a static array of mine models:
 for i in range(maxMines): mines.append(loader.loadModel("mine.egg")); mines[i].reparentTo(render); mines[i].hide()
 lights = []
@@ -58,8 +58,11 @@ base.win.requestProperties(props) # assign the above properties to the current w
 def rerender(task):
     scene_id = random.randint(0,354) # however many candidates there are for background images
     background = OnscreenImage(parent = render2d, image = "/home/caden/Pictures/backgrounds/bg_{}.png".format(scene_id)) # load background image
-    base.cam2d.node().getDisplayRegion(0).setSort(-20) # make sure it renders behind everything else
-    
+    #base.cam2d.node().getDisplayRegion(0).setClearDepthActive(True)
+    base.cam.node().getDisplayRegion(0).setClearDepthActive(True)
+    base.cam2d.node().getDisplayRegion(0).setSort(-1) # make sure it renders behind everything else
+    base.cam.node().getDisplayRegion(0).setSort(1)
+
     spot = [] # create & wipe array of spotlights for new render
     metadata = [] # wipe metadata for new render
     for mine in mines: mine.hide() # make sure no mines remain from previous loads
@@ -70,8 +73,8 @@ def rerender(task):
     line_path = render2d.attach_new_node(line_node)
     proj_mat = camLens.get_projection_mat_inv() # read the lens' inverse projection matrix
 
-    count = task.frame + start   # this is how I had to do the counter variable since I couldn't find a way to natively keep track of what iteration the
-                                # Panda task 'rerender' is on, but since it creates a new image every frame, it works well enough to just count frames
+    count = task.frame + start  # this is how I had to do the counter variable since I couldn't find a way to natively keep track of what iteration the
+                                # Panda task 'rerender' is on, but since it creates a new image every frame, this works well enough to just count frames
     num_mines = random.randint(minMines,maxMines) # choose how many mines will appear in this scene
 
     for i in range(num_mines):
@@ -106,7 +109,7 @@ def rerender(task):
         metadata.append(str(0)+" "+str(coordToImagespace(center).getX())+" "+str(coordToImagespace(center).getY())+" "+str(box_w/2)+" "+str(box_h/2)+"\n")
 
     image = PNMImage() # create a PNMImage wrapper, an image manipulation class native to Panda
-    base.camNode.getDisplayRegion(0).getScreenshot(image) # grab a PNM screenshot of the display region
+    base.win.getDisplayRegion(0).getScreenshot(image) # grab a PNM screenshot of the display region
     imageFile = "/home/caden/Pictures/mines2/images2/scene_{}.jpg".format(count-1) # set the filename (don't know why images and labels have to be 1 offset, but they do)
     image.write(Filename(imageFile)) # write the screenshot to the above file
     labelFile = open("/home/caden/Pictures/mines2/labels2/scene_{}.txt".format(count), "w+") # create the label file
