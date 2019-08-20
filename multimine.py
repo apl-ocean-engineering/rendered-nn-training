@@ -14,9 +14,10 @@ if "-h" in argv or "--help" in argv:
 else:
     go = True
 try:
+
     start = int(argv[1])
 except:
-    start = 0
+    start = -1
 try:
     end = int(argv[2])
 except IndexError:
@@ -35,17 +36,16 @@ def coordToImagespace(coord): # converts from Panda's 3D coordinate system to a 
 
 camLens = base.cam.node().getLens()
 camLens.setFocalLength(1833)
-camLens.setFilmSize(2048, 1536) # set the scale of the renderspace (this is not the actual pixel dimensions of the image yet)
-# create variables for general parameters that may be useful
+camLens.setFilmSize(2048, 1536) # set the scale of the renderspace (this is not image size, just arbitrary Panda units that will be used later to set image size)
+# create variables for general parameters that may be useful:
 M = camLens.getProjectionMat()
 f = camLens.getFocalLength()
 r = camLens.getAspectRatio()
 w = int(camLens.getFilmSize().getX())
 h = int(camLens.getFilmSize().getY())
+filters2D = CommonFilters(base.win, base.cam2d)
 filters3D = CommonFilters(base.win, base.cam)
-filters3D.setBlurSharpen(0.1)
-#filters2D = CommonFilters(base.win, base.cam2d)
-#filters2D.setBlurSharpen(1.0)
+base.win.setClearColor((0,0,0,0))
 mines = [] # create a static array of mine models:
 for i in range(maxMines): mines.append(loader.loadModel("mine.egg")); mines[i].reparentTo(render); mines[i].hide()
 lights = []
@@ -56,18 +56,22 @@ props.setSize(w, h) # set the window to be the same size (in pixels) as the rend
 base.win.requestProperties(props) # assign the above properties to the current window
 
 def rerender(task):
+    base.cam.node().getDisplayRegion(0).setClearDepthActive(True)
+    base.cam2d.node().getDisplayRegion(0).setClearDepthActive(True)
+    #filters2D.setBlurSharpen(0)
+    filters3D.setBlurSharpen(random.random()*0.8)
     scene_id = random.randint(0,354) # however many candidates there are for background images
     background = OnscreenImage(parent = render2d, image = "/home/caden/Pictures/backgrounds/bg_{}.png".format(scene_id)) # load background image
-    #base.cam2d.node().getDisplayRegion(0).setClearDepthActive(True)
-    base.cam.node().getDisplayRegion(0).setClearDepthActive(True)
-    base.cam2d.node().getDisplayRegion(0).setSort(-1) # make sure it renders behind everything else
-    base.cam.node().getDisplayRegion(0).setSort(1)
+    base.cam.node().getDisplayRegion(0).setSort(10) # make sure it renders behind everything else
+    base.cam2d.node().getDisplayRegion(0).setSort(-10)
+
+    #render2d.analyze()
 
     spot = [] # create & wipe array of spotlights for new render
     metadata = [] # wipe metadata for new render
     for mine in mines: mine.hide() # make sure no mines remain from previous loads
 
-    # the following is for calculating the 2D bounding box by creating a dummy projection in 2-space and reading the extrema of that node
+    # the following calculates the 2D bounding box by creating a dummy projection in 2-space and reading the extrema of that node
     proj_dummy = base.cam.attach_new_node("proj-dummy") # create a new node to hold the projected model
     line_node = GeomNode("lines")
     line_path = render2d.attach_new_node(line_node)
@@ -114,7 +118,7 @@ def rerender(task):
     image.write(Filename(imageFile)) # write the screenshot to the above file
     labelFile = open("/home/caden/Pictures/mines2/labels2/scene_{}.txt".format(count), "w+") # create the label file
     labelFile.writelines(metadata) # write the label data to separate lines
-    print(str(num_mines)+" mines in "+imageFile+". "+str(len(metadata))+" lines in /home/caden/Pictures/mines2/labels2/scene_{}.txt".format(count-1))
+    print(str(num_mines)+" mines in "+imageFile+" / "+str(len(metadata))+" lines in /home/caden/Pictures/mines2/labels2/scene_{}.txt".format(count))
     labelFile.close()
     line_node.remove_all_geoms() # wipes the bounding boxes
 
