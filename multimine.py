@@ -92,7 +92,7 @@ def rerender(task):
     num_mines = random.randint(minMines,maxMines) # choose how many mines will appear in this scene
 
     for i in range(num_mines):
-        mines[i].show()
+        mines[i].show() # display the active mines
 
         mines[i].setPos(random.uniform(-3.5,3.5),random.uniform(5,15),random.uniform(-2.5,2.5)) # set random position
         mines[i].setHpr(random.uniform(-180,180),random.uniform(-180,180),random.uniform(-180,180)) # set random orientation
@@ -133,15 +133,15 @@ def rerender(task):
     line_node.remove_all_geoms() # wipes the bounding boxes
 
     if verbose and count/10.0 == count//10:
-        print "\n3D scene analysis:"
+        print("\n3D scene analysis:")
         render.analyze()
-        print "2D scene analysis:"
+        print("2D scene analysis:")
         render2d.analyze()
 
     if count < end:
         return task.cont
     else:
-        print "Series complete."
+        print("Series complete.")
         return task.done
 
 if go:
