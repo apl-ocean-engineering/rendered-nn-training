@@ -55,7 +55,8 @@ if blurActive:
     filters3D = CommonFilters(base.win, base.cam)
     base.cam.node().getDisplayRegion(0).setClearColor((0,0,0,0))
 mines = [] # create a static array of mine models:
-for i in range(maxMines): mines.append(loader.loadModel("mine.egg")); mines[i].reparentTo(render); mines[i].hide()
+for i in range(maxMines): mines.append(loader.loadModel("mine.egg")); mines[i].reparentTo(render); mines[i].hide()  # it's possible to just point to mine.egg because it's in Panda's home models
+                                                                                                                    # directory. It could be anywhere, but then you'd have to specify a full path
 lights = []
 for i in range(maxMines): lights.append(Spotlight("slight")) # create corresponding lighting nodes for each mine
 
@@ -75,7 +76,8 @@ def rerender(task):
     scene_id = random.randint(0,354) # however many candidates there are for background images
     background = OnscreenImage(parent = render2d, image = "/home/caden/Pictures/backgrounds/bg_{}.png".format(scene_id)) # load background image
     base.cam2d.node().getDisplayRegion(0).setSort(-10)
-    base.cam.node().getDisplayRegion(0).setSort(10) # higher numbers render in front of lower numbers
+    base.cam.node().getDisplayRegion(0).setSort(10) # lower numbers render first, higher numbers render in front of lower numbers
+    # Display regions can also be accessed using base.win.getDisplayRegion(#), which contains all of them as far as I can tell
 
     spot = [] # create & wipe array of spotlights for new frame
     metadata = [] # wipe metadata for new frame
@@ -127,7 +129,7 @@ def rerender(task):
     imageFile = "/home/caden/Pictures/mines2/images2/scene_{}.jpg".format(count-1) # set the filename (don't know why images and labels have to be 1 offset, but they do)
     image.write(Filename(imageFile)) # write the screenshot to the above file
     labelFile = open("/home/caden/Pictures/mines2/labels2/scene_{}.txt".format(count), "w+") # create the label file
-    labelFile.writelines(metadata) # write the label data to separate lines
+    labelFile.writelines(metadata) # write the label data for separate mines to separate lines
     print(str(num_mines)+" mines in "+imageFile+" / "+str(len(metadata))+" lines in /home/caden/Pictures/mines2/labels2/scene_{}.txt".format(count))
     labelFile.close()
     line_node.remove_all_geoms() # wipes the bounding boxes
